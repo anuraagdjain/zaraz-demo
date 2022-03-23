@@ -22,6 +22,11 @@ the port to anything else if `8081` is occupied.
 6. Either run the index.js locally (`wrangler dev`) or publish it to your worker `wrangler publish`
 7. Open the HTTPS url which you obtained from the ngrok screen and you should see project working.
 
+## Improvements
+
+- [] - Unit test
+- [] - Environment variables for config
+
 # 👷 `worker-template` Hello World
 
 A template for kick starting a Cloudflare worker project.
