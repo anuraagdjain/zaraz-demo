@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  frontend:
+    image: nginx:latest
+    ports:
+      - "8081:80"
+    volumes:
+      - ../index.html:/usr/share/nginx/html/index.html
+    networks:
+      - cloudflare-network
+
+networks:
+  cloudflare-network:
