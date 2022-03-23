@@ -1,7 +1,8 @@
-const cookie = require('cookie')
+'use strict'
 
 const config = require('./util/config')
 const postHandler = require('./handlers/postHandler')
+const getHandler = require('./handlers/getHandler')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': config.frontendUrl,
@@ -49,55 +50,7 @@ async function handleRequest(request) {
     const requestMethod = request.method.toLowerCase()
 
     if (requestMethod === 'get') {
-      const parsedCookies = cookie.parse(request.headers.get('Cookie') || '')
-      console.log('ParsedCookies: ', JSON.stringify(parsedCookies))
-      if (parsedCookies.name && parsedCookies.quote) {
-        response = `
-            console.log('cookie "name": ${parsedCookies.name}');
-            console.log('cookie "quote": ${parsedCookies.quote}');
-        `
-        const res = new Response(response, {
-          headers: {
-            ...corsHeaders,
-          },
-        })
-        res.headers.append(
-          'set-cookie',
-          `name=${parsedCookies.name};SameSite=None;`,
-        )
-        res.headers.append(
-          'set-cookie',
-          `quote=${parsedCookies.quote};SameSite=None;`,
-        )
-        return res
-      } else {
-        return new Response(
-          `
-            const URL = '${config.workerUrl}';
-            var payload = JSON.stringify({ "name": name, "quote": quote });
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", URL, true);
-            xhr.withCredentials = 'true';
-            
-            xhr.onreadystatechange = function () {
-              if(xhr.readyState === XMLHttpRequest.DONE) {
-                var status = xhr.status;
-                if (status === 0 || (status >= 200 && status < 400)) {
-                  console.log('Visiter IP', JSON.parse(xhr.response));
-                } else {
-                  console.log('Something went wrong', xhr.response);
-                }
-              }
-            };
-            xhr.send(payload);`,
-          {
-            headers: {
-              ...corsHeaders,
-              'content-type': 'text/html',
-            },
-          },
-        )
-      }
+      return getHandler(request, corsHeaders)
     } else if (requestMethod === 'post') {
       return postHandler(request, corsHeaders)
     }
