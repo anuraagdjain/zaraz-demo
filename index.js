@@ -1,6 +1,7 @@
 const cookie = require('cookie')
 
 const config = require('./util/config')
+const postHandler = require('./handlers/postHandler')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': config.frontendUrl,
@@ -35,8 +36,6 @@ function handleOptions(request) {
     return new Response(null, {
       headers: {
         ...corsHeaders,
-        'Access-Control-Allow-Origin': config.frontendUrl,
-        Allow: 'GET, HEAD, POST, OPTIONS',
       },
     })
   }
@@ -74,69 +73,37 @@ async function handleRequest(request) {
       } else {
         return new Response(
           `
-      const URL = 'https://zaraz-demo.thehray.workers.dev/';
-      // var URL1 = 'http://localhost:8787/';
-      var pd = JSON.stringify({ "name": name, "quote": quote });
-      console.log('payload', pd);
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", URL, true);
-      xhr.withCredentials = 'true';
-      // xhr.setRequestHeader("Content-Type", "application/json");
-      // xhr.setRequestHeader('Access-Control-Allow-Origin','*');
-      
-      xhr.onreadystatechange = function () {
-        // In local files, status is 0 upon success in Mozilla Firefox
-        if(xhr.readyState === XMLHttpRequest.DONE) {
-          var status = xhr.status;
-          if (status === 0 || (status >= 200 && status < 400)) {
-            // The request has been completed successfully
-            console.log('Cloudflare worker executed');
-          } else {
-            // Oh no! There has been an error with the request!
-            console.log('Something went wrong', xhr.response);
-          }
-        }
-      };
+            const URL = '${config.workerUrl}';
+            var payload = JSON.stringify({ "name": name, "quote": quote });
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", URL, true);
+            xhr.withCredentials = 'true';
+            
+            xhr.onreadystatechange = function () {
+              // In local files, status is 0 upon success in Mozilla Firefox
+              if(xhr.readyState === XMLHttpRequest.DONE) {
+                var status = xhr.status;
+                if (status === 0 || (status >= 200 && status < 400)) {
+                  // The request has been completed successfully
+                  console.log('Cloudflare worker executed');
+                } else {
+                  // Oh no! There has been an error with the request!
+                  console.log('Something went wrong', xhr.response);
+                }
+              }
+            };
 
-      xhr.send(pd);`,
+            xhr.send(payload);`,
           {
             headers: {
               ...corsHeaders,
-              'Set-Cookie': 'name=testings;',
-              'Access-Control-Allow-Origin':
-                'https://4510-122-174-106-254.ngrok.io',
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
               'content-type': 'text/html',
             },
           },
         )
       }
-    } else if (request.method.toLowerCase() === 'post') {
-      const body = await request.json()
-      const res = new Response(`console.log('POST-received');`, {
-        headers: {
-          ...corsHeaders,
-          // 'Set-Cookie': `name=${body.name};quote=${body.quote};SameSite=None;`,
-          // 'Set-Cookie': `quote=${body.quote};SameSite=None;`,
-          'Access-Control-Allow-Origin':
-            'https://4510-122-174-106-254.ngrok.io',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'content-type': 'text/html',
-        },
-      })
-      const d = new Date()
-      d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000) //
-      const cookieExpiry = `expires=${d.toUTCString()}`
-
-      res.headers.append(
-        'set-cookie',
-        `name=${body.name};SameSite=None;Secure;${cookieExpiry};`,
-      )
-      res.headers.append(
-        'set-cookie',
-        `quote=${body.quote};SameSite=None;Secure;${cookieExpiry};`,
-      )
-      return res
+    } else if (requestMethod === 'post') {
+      return postHandler(request, corsHeaders)
     }
   }
   return response
